@@ -45,76 +45,82 @@ vector<Comanda> Comanda::citireComenzi(const string& fisier_comenzi) {
          << setw(10) << "Total" << "\n";
     cout << string(60, '-') << "\n";
 
-    unordered_map<string, unordered_map<string, pair<int, double>>> comenzi_map;
-
     for (const auto& rand : date_comenzi) {
         try {
-
-
             if (rand.size() != 4) {
                 throw invalid_argument("Număr incorect de coloane");
             }
 
             string nume_client = rand[0];
             string produs_comandat = rand[1];
-
-            // Validare pentru cantitate
+            
+            // Validare cantitate
             if (!all_of(rand[2].begin(), rand[2].end(), ::isdigit)) {
                 throw invalid_argument("Cantitate invalidă: " + rand[2]);
             }
             int cantitate = stoi(rand[2]);
 
-            // Validare pentru preț total
-            double pret_total;
-            try {
-                pret_total = stod(rand[3]);
-            } catch (const invalid_argument& e) {
-                throw invalid_argument("Preț total invalid: " + rand[3]);
-            } catch (const out_of_range& e) {
-                throw invalid_argument("Preț total prea mare: " + rand[3]);
-            }
+            // Validare preț total
+            double pret_total = stod(rand[3]);
 
-            comenzi_map[nume_client][produs_comandat].first += cantitate;
-            comenzi_map[nume_client][produs_comandat].second += pret_total;
+            // Adaugăm comanda în vector
+            comenzi.emplace_back(nume_client, produs_comandat, cantitate, pret_total);
+
+            // Afișăm direct comanda citită
+            comenzi.back().afisareDetalii();
         } catch (const exception& e) {
             cerr << "Eroare la citirea comenzii: " << e.what() << "\n";
-        }
-    }
-
-    for (const auto& client : comenzi_map) {
-        for (const auto& produs : client.second) {
-            comenzi.emplace_back(client.first, produs.first, produs.second.first, produs.second.second);
-            comenzi.back().afisareDetalii(); // Afișăm comanda curentă
         }
     }
 
     return comenzi;
 }
 
+
 void Comanda::adaugareComanda(const string& fisier_comenzi, const string& nume_client, const vector<pair<string, int>>& produse_comandate, const string& fisier_produse) {
     vector<vector<string>> comenzi = CsvHandler::citire(fisier_comenzi);
     auto produse_disponibile = Produs::citireProduse(fisier_produse);
 
+    vector<vector<string>> produse_actualizate = CsvHandler::citire(fisier_produse);
+
+    double pret_total = 0.0;
+
     for (const auto& produs_comandat : produse_comandate) {
-        double pret_total = 0.0;
         bool produs_gasit = false;
 
-        for (const auto& produs : produse_disponibile) {
-            if (produs_comandat.first == produs.getNume()) {
-                pret_total = produs.getPret() * produs_comandat.second;
-                produs_gasit = true;
-                break;
+        for (auto& rand : produse_actualizate) {
+            if (rand[0] == produs_comandat.first) { // Găsim produsul în CSV
+                int cantitate_disponibila = stoi(rand[3]); // Coloana 4 = Cantitate
+                if (cantitate_disponibila >= produs_comandat.second) {
+                    cantitate_disponibila -= produs_comandat.second; // Scădem cantitatea
+                    rand[3] = to_string(cantitate_disponibila); // Actualizăm cantitatea în CSV
+
+                    // Calculăm prețul total
+                    double pret_unitar = stod(rand[2]); // Coloana 3 = Preț
+                    pret_total += pret_unitar * produs_comandat.second;
+
+                    // Adăugăm rândul comenzii în format corect
+                    comenzi.push_back({nume_client, produs_comandat.first, to_string(produs_comandat.second), to_string(pret_unitar * produs_comandat.second)});
+                    produs_gasit = true;
+                    break;
+                } else {
+                    cerr << "Produsul \"" << produs_comandat.first << "\" nu are stoc suficient. Disponibil: " << cantitate_disponibila << "\n";
+                    return; // Oprire dacă stocul este insuficient
+                }
             }
         }
 
         if (!produs_gasit) {
-            cerr << "Produsul \"" << produs_comandat.first << "\" nu există în lista produselor disponibile.\n";
-            continue;
+            cerr << "Produsul \"" << produs_comandat.first << "\" nu există în inventar.\n";
+            return;
         }
-
-        comenzi.push_back({nume_client, produs_comandat.first, to_string(produs_comandat.second), to_string(pret_total)});
     }
 
+    // Actualizăm inventarul în CSV
+    CsvHandler::scriere(fisier_produse, produse_actualizate);
+
+    // Scriem comenzile actualizate în CSV
     CsvHandler::scriere(fisier_comenzi, comenzi);
+
     cout << "Comanda a fost adăugată cu succes.\n";
 }

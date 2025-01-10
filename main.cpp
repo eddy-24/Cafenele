@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <string>
 #include "Angajati/Angajat.h"
 #include "Produse/Produs.h"
 #include "Comenzi/Comanda.h"
@@ -65,6 +66,33 @@ void afisareMeniuSalarii() {
     cout << "Alegeți o opțiune: ";
 }
 
+string alegeOras() {
+    cout << "\n=== Selectare Oraș ===\n";
+    cout << "1. București\n";
+    cout << "2. Cluj-Napoca\n";
+    cout << "3. Timișoara\n";
+    cout << "4. Iași\n";
+    cout << "5. Brașov\n";
+    cout << "Alegeți un oraș (1-5): ";
+
+    int optiune_oras = 0;
+    string oras;
+
+    cin >> optiune_oras;
+    switch (optiune_oras) {
+        case 1: oras = "București"; break;
+        case 2: oras = "Cluj-Napoca"; break;
+        case 3: oras = "Timișoara"; break;
+        case 4: oras = "Iași"; break;
+        case 5: oras = "Brașov"; break;
+        default:
+            cout << "Opțiune invalidă. Implicit orașul București a fost selectat.\n";
+            oras = "București";
+    }
+
+    return oras;
+}
+
 void sectiuneClient(const string& fisier_produse, const string& fisier_comenzi) {
     cout << "\n=== Secțiune Client ===\n";
 
@@ -111,11 +139,13 @@ void sectiuneClient(const string& fisier_produse, const string& fisier_comenzi) 
 }
 
 int main() {
-    string fisier_angajati = "data/angajati.csv";
-    string fisier_produse = "data/produse.csv";
-    string fisier_comenzi = "data/comenzi.csv";
+    string oras = alegeOras();
+
+    string fisier_angajati = "data/" + oras + "_angajati.csv";
+    string fisier_produse = "data/" + oras + "_produse.csv";
+    string fisier_comenzi = "data/" + oras + "_comenzi.csv";
     string fisier_evenimente = "data/evenimente.csv";
-    string fisier_salarii = "data/salarii.csv";
+    string fisier_salarii = "data/" + oras + "_salarii.csv";
 
     // Reparăm fișierele CSV înainte de citire
     Angajat::reparaCSV(fisier_angajati);

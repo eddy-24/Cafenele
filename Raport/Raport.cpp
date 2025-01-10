@@ -14,7 +14,7 @@ void Raport::generareRaport(const string& fisier_angajati, const string& fisier_
     // Calculăm salariile angajaților pentru o zi
     double total_salarii = 0.0;
     for (const auto& angajat : angajati) {
-        int ore_lucrate = angajat.getOraSfarsit() - angajat.getOraInceput();
+        int ore_lucrate = angajat->getOraSfarsit() - angajat->getOraInceput();
         double salariu_orar = 20.0; // Exemplu: 20 lei/oră
         total_salarii += ore_lucrate * salariu_orar; // Salariu zilnic
     }
