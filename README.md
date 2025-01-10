@@ -86,4 +86,5 @@ Această aplicație gestionează o rețea de cafenele din România, acoperind fu
    ./cafenele
    ```
 ![Diagramă Arhitectură](DATA/Diagrama.png)
+[Matrice de Testare - Excel](DATA/Matrice_de_Testare.xlsx)
 
